@@ -63,8 +63,8 @@ function main() {
 	echo "Remove ${node_dir}"
 	rm -fR "${node_dir}"
 	
-	#echo "Remove ${tmp_dir}"
-	#rm -fR "${tmp_dir}"
+	echo "Remove ${tmp_dir}"
+	rm -fR "${tmp_dir}"
 	
 	echo "Remove ${var_dir}"
 	rm -fR "${var_dir}"
@@ -111,6 +111,14 @@ function main() {
 	echo "Run install_app.sh"
 	cd "${gn_dir}/install/"
 	./install_app.sh
+
+	echo "GeoNature install_app.sh remove geonature_config.toml => restore link !"
+	echo "Restore GeoNature 'geonature_config.toml' link"
+	if [[ ! -L "${cfg_dir}/geonature_config.toml" ]]; then
+		echo "...restoring geonature_config.toml link !"
+		mv "${cfg_dir}/geonature_config.toml" "${cfg_dir}/geonature_config.toml.save-$(date +%FT%T)"
+		ln -s "${current_gn_cfg_dir}/geonature/geonature_config.toml" "${cfg_dir}/geonature_config.toml"
+	fi
 }
 
 

@@ -9,8 +9,8 @@
 # ATTENTION : si le script porte l'extenssion ".sh" dans le dossier /etc/cron.daily le script ne se lance pas.
 # Pour voir les script qui vont se lancer, utiliser : `run-parts --test /etc/cron.daily`
 
-LOCAL_USER="jpm"
-LOCAL_DIR="/home/jpm/Documents/Stockage/backups/wiki-intranet"
+LOCAL_USER="jpmilcent"
+LOCAL_DIR="/home/jpmilcent/Documents/Stockage/backups/wiki-intranet"
 ADMIN_EMAIL="jp.milcent@cbn-alpin.fr"
 DATE=$(date '+%Y-%m-%d')
 DATE_DIR="$LOCAL_DIR/$DATE"

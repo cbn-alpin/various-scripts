@@ -14,7 +14,7 @@ function main() {
 	local readonly tmp_dir="${gn_dir}/tmp"
 	local readonly var_dir="${gn_dir}/var"
 	local readonly current_gn_cfg_dir="${HOME}/Applications/geonature/configs/current"
-	
+
 	echo "Are you sure to clean GeoNature local install (y/n) ?"
 	read -r -n 1 key
 	echo # Move to a new line
@@ -108,9 +108,9 @@ function main() {
 	cd "${gn_dir}/install/"
 	./install_db.sh
 	
-	echo "Run install_app.sh"
+	echo "Run install_app.sh in DEV mode !"
 	cd "${gn_dir}/install/"
-	./install_app.sh
+	./install_app.sh --dev
 
 	echo "GeoNature install_app.sh remove geonature_config.toml => restore link !"
 	echo "Restore GeoNature 'geonature_config.toml' link"

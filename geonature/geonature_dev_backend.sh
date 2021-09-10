@@ -5,26 +5,29 @@
 function main() {
 	local readonly bck_dir="/home/${USER}/workspace/geonature/web/geonature/backend"
 	local readonly venv_dir="${bck_dir}/venv"
+	local readonly version=$(cat "${bck_dir}/../VERSION")
+	echo "GeoNature version: ${version}"
 
-	# Check Supervisor conf and fix it if necessary
-	
-	local stop_supervisor=false
-	local readonly supervisor_conf_dir="/etc/supervisor/conf.d"
-	local readonly confs=("geonature-service.conf" "usershub-service.conf" "taxhub-service.conf")
-	for conf in "${confs[@]}"; do
-		local readonly supervisor_conf="${supervisor_conf_dir}/${conf}"
-		if grep -q "autostart=true" "${supervisor_conf}" ; then	
-			checkSuperuser
-			sudo sed -i "s/^\(autostart\)\s*=.*$/\1=false/" "${supervisor_conf}"
-			stop_supervisor=true
+	if version_gt "2.7.5" "${version}"; then
+		# Check Supervisor conf and fix it if necessary
+		local stop_supervisor=false
+		local readonly supervisor_conf_dir="/etc/supervisor/conf.d"
+		local readonly confs=("geonature-service.conf" "usershub-service.conf" "taxhub-service.conf")
+		for conf in "${confs[@]}"; do
+			local readonly supervisor_conf="${supervisor_conf_dir}/${conf}"
+			if grep -q "autostart=true" "${supervisor_conf}" ; then	
+				checkSuperuser
+				sudo sed -i "s/^\(autostart\)\s*=.*$/\1=false/" "${supervisor_conf}"
+				stop_supervisor=true
+			fi
+		done
+		if [[ ${stop_supervisor} ]]; then
+			sudo supervisorctl stop all
 		fi
-	done
-	if [[ ${stop_supervisor} ]]; then
-		sudo supervisorctl stop all
 	fi
 	
 	# Go to GeoNature backend directory (optional)
-	cd ${bck_dir}
+	cd "${bck_dir}"
 
 	# Activate the virtualenv
 	. "${venv_dir}/bin/activate"
@@ -68,6 +71,10 @@ function checkSuperuser() {
 
     echo 'Successfully acquired superuser credentials.'
     return 0
+}
+
+function version_gt() {
+	test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
 main "${@}"

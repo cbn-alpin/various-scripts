@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Encoding : UTF-8
 # Script to run Taxhub Backend in developpement mode.
+set -euo pipefail
+
+#+----------------------------------------------------------------------------------------------------------+
+# Load utils
+script_path=$(realpath "${BASH_SOURCE[0]}")
+source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
 	local readonly bck_dir="/home/${USER}/workspace/geonature/web/taxhub"
@@ -8,7 +14,7 @@ function main() {
 	local readonly version=$(cat "${bck_dir}/VERSION")
 	echo "TaxHub version: ${version}"
 
-	if version_gt "${version}" "1.8.0" ]]; then
+	if version_gt "${version}" "1.8.0"; then
 		cd "${bck_dir}"
 		
 		export FLASK_ENV=development
@@ -44,44 +50,6 @@ function main() {
 		export FLASK_ENV="development";
 		python server.py
 	fi
-}
-
-# DESC: Validate we have superuser access as root (via sudo if requested)
-# ARGS: $1 (optional): Set to any value to not attempt root access via sudo
-# OUTS: None
-# SOURCE: https://github.com/ralish/bash-script-template/blob/stable/source.sh
-function checkSuperuser() {
-    local superuser
-    if [[ ${EUID} -eq 0 ]]; then
-        superuser=true
-    elif [[ -z ${1-} ]]; then
-        if command -v "sudo" > /dev/null 2>&1; then
-            echo 'Sudo: Updating cached credentials ...'
-            if ! sudo -v; then
-                echo "Sudo: Couldn't acquire credentials ..."
-            else
-                local test_euid
-                test_euid="$(sudo -H -- "${BASH}" -c 'printf "%s" "${EUID}"')"
-                if [[ ${test_euid} -eq 0 ]]; then
-                    superuser=true
-                fi
-            fi
-        else
-			echo "Missing dependency: sudo"
-        fi
-    fi
-
-    if [[ -z ${superuser-} ]]; then
-        echo 'Unable to acquire superuser credentials.'
-        return 1
-    fi
-
-    echo 'Successfully acquired superuser credentials.'
-    return 0
-}
-
-function version_gt() {
-	test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
 main "${@}"

@@ -2,6 +2,12 @@
 # Encoding : UTF-8
 # Script to clean GeoNature App before re-install. Use for development.
 
+set -euo pipefail
+
+#+----------------------------------------------------------------------------------------------------------+
+# Load utils
+script_path=$(realpath "${BASH_SOURCE[0]}")
+source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
 	local readonly gn_dir="${HOME}/workspace/geonature/web/geonature"
@@ -14,7 +20,9 @@ function main() {
 	local readonly tmp_dir="${gn_dir}/tmp"
 	local readonly var_dir="${gn_dir}/var"
 	local readonly current_gn_cfg_dir="${HOME}/Applications/geonature/configs/current"
-	
+	local readonly version=$(cat "${gn_dir}/VERSION")
+	echo "GeoNature version: ${version}"
+
 	echo "Are you sure to clean GeoNature local APP install (y/n) ?"
 	read -r -n 1 key
 	echo # Move to a new line
@@ -74,10 +82,15 @@ function main() {
 
 	echo "Get super user rights"
 	checkSuperuser
-
-	echo "Run install_app.sh in DEV mode !"
+	
 	cd "${gn_dir}/install/"
-	./install_app.sh --dev
+	if version_gt "${version}" "2.7.5"; then
+		echo "Run install frontend"
+		./04_install_frontend.sh --dev
+	else
+		echo "Run install_app.sh in DEV mode !"
+		./install_app.sh --dev
+	fi
 
 	echo "GeoNature install_app.sh remove geonature_config.toml => restore link !"
 	echo "Restore GeoNature 'geonature_config.toml' link"
@@ -86,41 +99,6 @@ function main() {
 		mv "${cfg_dir}/geonature_config.toml" "${cfg_dir}/geonature_config.toml.save-$(date +%FT%T)"
 		ln -s "${current_gn_cfg_dir}/geonature/geonature_config.toml" "${cfg_dir}/geonature_config.toml"
 	fi
-}
-
-
-# DESC: Validate we have superuser access as root (via sudo if requested)
-# ARGS: $1 (optional): Set to any value to not attempt root access via sudo
-# OUTS: None
-# SOURCE: https://github.com/ralish/bash-script-template/blob/stable/source.sh
-function checkSuperuser() {
-    local superuser
-    if [[ ${EUID} -eq 0 ]]; then
-        superuser=true
-    elif [[ -z ${1-} ]]; then
-        if command -v "sudo" > /dev/null 2>&1; then
-            echo 'Sudo: Updating cached credentials ...'
-            if ! sudo -v; then
-                echo "Sudo: Couldn't acquire credentials ..."
-            else
-                local test_euid
-                test_euid="$(sudo -H -- "${BASH}" -c 'printf "%s" "${EUID}"')"
-                if [[ ${test_euid} -eq 0 ]]; then
-                    superuser=true
-                fi
-            fi
-        else
-			echo "Missing dependency: sudo"
-        fi
-    fi
-
-    if [[ -z ${superuser-} ]]; then
-        echo 'Unable to acquire superuser credentials.'
-        return 1
-    fi
-
-    echo 'Successfully acquired superuser credentials.'
-    return 0
 }
 
 main "${@}"

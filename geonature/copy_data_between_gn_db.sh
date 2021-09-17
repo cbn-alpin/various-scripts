@@ -202,6 +202,14 @@ sudo -n -u "${pg_admin_name}" -s \
     psql -d "${dest_db_name}" -c "COPY gn_synthese.synthese FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "
+        DELETE FROM gn_synthese.cor_area_synthese AS cas
+        WHERE NOT EXISTS (
+            SELECT FROM gn_synthese.synthese AS s 
+            WHERE s.id_synthese = cas.id_synthese 
+        ) ; "
+
+sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "COPY gn_synthese.cor_area_synthese TO stdout WITH csv null AS E'\\\\N'" | 
     psql -d "${dest_db_name}" -c "COPY gn_synthese.cor_area_synthese FROM stdin csv null AS E'\\\\N'"
 

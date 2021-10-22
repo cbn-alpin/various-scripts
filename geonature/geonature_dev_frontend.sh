@@ -4,6 +4,8 @@
 
 readonly front_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/geonature/frontend"})
 echo "Path used: ${front_dir}"
+local readonly version=$(cat "${front_dir}/../VERSION")
+echo "GeoNature version: ${version}"
 
 # Go to GeoNature frontend directory
 cd ${front_dir}

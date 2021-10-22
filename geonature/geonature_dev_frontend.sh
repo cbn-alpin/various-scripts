@@ -2,7 +2,8 @@
 # Encoding : UTF-8
 # Script to run GeoNature in development mode.
 
-readonly front_dir="/home/${USER}/workspace/geonature/web/geonature/frontend"
+readonly front_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/geonature/frontend"})
+echo "Path used: ${front_dir}"
 
 # Go to GeoNature frontend directory
 cd ${front_dir}

@@ -1,10 +1,12 @@
  #!/usr/bin/env bash
 # Encoding : UTF-8
 # Script to clean Usershub before re-install all. Use for development.
-
+# Usage: usershub_clean.sh [<path-to-geonature>]
+# Ex.: usershub_clean.sh .
 
 function main() {
-	local readonly main_dir="${HOME}/workspace/geonature/web/usershub"
+	local readonly main_dir=$(realpath ${1:-"${HOME}/workspace/geonature/web/usershub"})
+	echo "Path used: ${main_dir}"
 	local readonly venv_dir="${main_dir}/venv"
 	local readonly var_dir="${main_dir}/var"
 	local readonly log_dir="${var_dir}/log"

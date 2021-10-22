@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Encoding : UTF-8
 # Script to run Usershub Backend in developpement mode.
+# Usage: usershub_dev_backend.sh [<path-to-geonature>]
+# Ex.: usershub_dev_backend.sh .
+
 set -euo pipefail
 
 #+----------------------------------------------------------------------------------------------------------+
@@ -9,7 +12,8 @@ script_path=$(realpath "${BASH_SOURCE[0]}")
 source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
-	local readonly bck_dir="/home/${USER}/workspace/geonature/web/usershub"
+	local readonly bck_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/usershub"})
+	echo "Path used: ${bck_dir}"
 	local readonly venv_dir="${bck_dir}/venv"
 	local readonly version=$(cat "${bck_dir}/VERSION")
 	echo "UsersHub version: ${version}"

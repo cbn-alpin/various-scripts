@@ -10,7 +10,8 @@ script_path=$(realpath "${BASH_SOURCE[0]}")
 source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
-	local readonly bck_dir="/home/${USER}/workspace/geonature/web/geonature/backend"
+	local readonly bck_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/geonature/backend"})
+	echo "Path used: ${bck_dir}"
 	local readonly venv_dir="${bck_dir}/venv"
 	local readonly version=$(cat "${bck_dir}/../VERSION")
 	echo "GeoNature version: ${version}"

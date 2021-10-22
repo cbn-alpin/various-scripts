@@ -1,6 +1,8 @@
  #!/usr/bin/env bash
 # Encoding : UTF-8
 # Script to clean GeoNature App before re-install. Use for development.
+# Usage: geonature_clean_app.sh [<path-to-geonature>] [<config-dir-name>]
+# Ex.: geonature_clean_app.sh . flore-sentinelle
 
 set -euo pipefail
 
@@ -10,7 +12,11 @@ script_path=$(realpath "${BASH_SOURCE[0]}")
 source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
-	local readonly gn_dir="${HOME}/workspace/geonature/web/geonature"
+	local readonly gn_dir=$(realpath ${1:-"${HOME}/workspace/geonature/web/geonature"})
+	echo "Path used: ${main_dir}"
+	local readonly cfg_name="${2:-'current'}"
+	echo "Config name used: ${cfg_name}"
+
 	local readonly cfg_dir="${gn_dir}/config"
 	local readonly em_dir="${gn_dir}/external_modules"
 	local readonly bke_dir="${gn_dir}/backend"
@@ -19,7 +25,7 @@ function main() {
 	local readonly node_dir="${fte_dir}/node_modules"
 	local readonly tmp_dir="${gn_dir}/tmp"
 	local readonly var_dir="${gn_dir}/var"
-	local readonly current_gn_cfg_dir="${HOME}/Applications/geonature/configs/current"
+	local readonly current_gn_cfg_dir="${HOME}/Applications/geonature/configs/${cfg_name}"
 	local readonly version=$(cat "${gn_dir}/VERSION")
 	echo "GeoNature version: ${version}"
 

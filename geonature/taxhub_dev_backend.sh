@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Encoding : UTF-8
 # Script to run Taxhub Backend in developpement mode.
+# Usage: taxhub_dev_backend.sh [<path-to-geonature>]
+# Ex.: taxhub_dev_backend.sh .
 set -euo pipefail
 
 #+----------------------------------------------------------------------------------------------------------+
@@ -9,7 +11,8 @@ script_path=$(realpath "${BASH_SOURCE[0]}")
 source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
-	local readonly bck_dir="/home/${USER}/workspace/geonature/web/taxhub"
+	local readonly bck_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/taxhub"})
+	echo "Path used: ${bck_dir}"
 	local readonly venv_dir="${bck_dir}/venv"
 	local readonly version=$(cat "${bck_dir}/VERSION")
 	echo "TaxHub version: ${version}"

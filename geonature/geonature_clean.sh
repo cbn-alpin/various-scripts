@@ -12,7 +12,7 @@ source "$(realpath "${script_path%/*}")/lib_utils.bash"
 
 function main() {
 	local readonly gn_dir=$(realpath ${1:-"${HOME}/workspace/geonature/web/geonature"})
-	echo "Path used: ${main_dir}"
+	echo "Path used: ${gn_dir}"
 	local readonly cfg_name="${2:-'current'}"
 	echo "Config name used: ${cfg_name}"
 
@@ -28,7 +28,7 @@ function main() {
 	local readonly version=$(cat "${gn_dir}/VERSION")
 	echo "GeoNature version: ${version}"
 
-	
+
 	echo "Are you sure to clean GeoNature local install (y/n) ?"
 	read -r -n 1 key
 	echo # Move to a new line
@@ -57,12 +57,12 @@ function main() {
 	if [[ ! "${key}" =~ ^[Yy]$ ]];then
 		[[ "${0}" = "${BASH_SOURCE}" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
 	fi
-	
-	
+
+
 	echo "Remove ${em_dir}/*"
 	cd "${em_dir}/"
 	rm -fR *
-	
+
 	cd "${gn_dir}/"
 
 	echo "Remove ${bke_dir}/static/node_modules"
@@ -73,16 +73,16 @@ function main() {
 
 	echo "Remove ${venv_dir}"
 	rm -fR "${venv_dir}"
-	
+
 	echo "Remove ${node_dir}"
 	rm -fR "${node_dir}"
-	
+
 	echo "Remove ${tmp_dir}"
 	rm -fR "${tmp_dir}"
-	
+
 	echo "Remove ${var_dir}"
 	rm -fR "${var_dir}"
-	
+
 	echo "Update GeoNature 'drop_apps_db' parameter to 'true'"
 	sed -i --follow-symlinks "s/^\(drop_apps_db\)=.*$/\1=true/" "${gn_dir}/config/settings.ini"
 
@@ -91,6 +91,9 @@ function main() {
 
 	echo "Get super user rights"
 	checkSuperuser
+
+	echo "Install GN dependencies (except : apache2, git, postgresql, postgis)"
+	sudo apt install unzip python3-pip python3-venv libgdal-dev libpangocairo-1.0-0
 
 	echo "Create GeoNature role admin in database if necessary"
 	if psql -t -c '\du' | cut -d \| -f 1 | grep -qw "${user_pg}"; then
@@ -117,7 +120,7 @@ function main() {
 		"AND pid <> pg_backend_pid();")
 	sudo -n -u 'postgres' -s \
         psql -d 'postgres' -c "${query[*]}"
-	
+
 	if version_gt "${version}" "2.7.5" ; then
 		cd "${gn_dir}/install/"
 
@@ -127,13 +130,16 @@ function main() {
 		echo "Run create DB"
 		./02_create_db.sh
 
+		echo "Run install GN modules"
+		./03_install_gn_modules.sh
+
 		echo "Run install frontend"
 		./04_install_frontend.sh --dev
 	else
 		cd "${gn_dir}/install/"
 		echo "Run install_db.sh"
 		./install_db.sh
-		
+
 		echo "Run install_app.sh in DEV mode !"
 		./install_app.sh --dev
 	fi

@@ -23,7 +23,7 @@ function main() {
 		local readonly confs=("geonature-service.conf" "usershub-service.conf" "taxhub-service.conf")
 		for conf in "${confs[@]}"; do
 			local readonly supervisor_conf="${supervisor_conf_dir}/${conf}"
-			if grep -q "autostart=true" "${supervisor_conf}" ; then	
+			if grep -q "autostart=true" "${supervisor_conf}" ; then
 				checkSuperuser
 				sudo sed -i "s/^\(autostart\)\s*=.*$/\1=false/" "${supervisor_conf}"
 				stop_supervisor=true
@@ -33,7 +33,7 @@ function main() {
 			sudo supervisorctl stop all
 		fi
 	fi
-	
+
 	# Go to GeoNature backend directory (optional)
 	cd "${bck_dir}"
 
@@ -42,8 +42,10 @@ function main() {
 
 	# Run GeoNature in DEV mode with extra options for Gunicorn and Flask
 	export GUNICORN_CMD_ARGS="--capture-output --log-level debug";
+    # FLASK_ENV see: https://flask.palletsprojects.com/en/2.0.x/config/#environment-and-debug-features
 	export FLASK_ENV="development";
-	export GDAL_DATA="${venv_dir}/lib/python3.7/site-packages/fiona/gdal_data"
+    # To avoid GDAL debug message. Not necessary anymore (?).
+	#export GDAL_DATA="${venv_dir}/lib/python3.7/site-packages/fiona/gdal_data"
 	geonature dev_back
 }
 

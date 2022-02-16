@@ -28,11 +28,12 @@ fi
 
 # NOMENCLATURES
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${dest_db_name}" -c 'TRUNCATE 
+    psql -d "${dest_db_name}" -c 'TRUNCATE
         taxonomie.bib_noms,
         ref_geo.bib_areas_types,
         ref_geo.l_areas,
         ref_nomenclatures.bib_nomenclatures_types,
+        utilisateurs.t_applications,
         utilisateurs.bib_organismes,
         utilisateurs.t_roles,
         gn_meta.t_acquisition_frameworks,
@@ -52,12 +53,12 @@ sudo -n -u "${pg_admin_name}" -s \
 # ORGANISMS
 sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "COPY utilisateurs.bib_organismes (
-        id_organisme, uuid_organisme, nom_organisme, adresse_organisme, cp_organisme, 
-        ville_organisme, tel_organisme, fax_organisme, email_organisme, url_organisme, 
-        url_logo, id_parent) TO stdout WITH csv null AS E'\\\\N'" | 
+        id_organisme, uuid_organisme, nom_organisme, adresse_organisme, cp_organisme,
+        ville_organisme, tel_organisme, fax_organisme, email_organisme, url_organisme,
+        url_logo, id_parent) TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.bib_organismes (
-        id_organisme, uuid_organisme, nom_organisme, adresse_organisme, cp_organisme, 
-        ville_organisme, tel_organisme, fax_organisme, email_organisme, url_organisme, 
+        id_organisme, uuid_organisme, nom_organisme, adresse_organisme, cp_organisme,
+        ville_organisme, tel_organisme, fax_organisme, email_organisme, url_organisme,
         url_logo, id_parent) FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
@@ -105,19 +106,23 @@ sudo -n -u "${pg_admin_name}" -s \
 #+-------------------------------------------------------------------------------------------------+
 # USERS (role)
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY utilisateurs.t_roles TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY utilisateurs.t_roles TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.t_roles FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_roles TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_roles TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.cor_roles FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_role_token TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_role_token TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.cor_role_token FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_role_app_profil TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY utilisateurs.t_applications TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY utilisateurs.t_applications FROM stdin csv null AS E'\\\\N'"
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_role_app_profil TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.cor_role_app_profil FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s psql -d "${dest_db_name}" -f "${SCRIPT_DIR}/default_permissions_sinp.sql"
@@ -125,35 +130,35 @@ sudo -n -u "${pg_admin_name}" -s psql -d "${dest_db_name}" -f "${SCRIPT_DIR}/def
 #+-------------------------------------------------------------------------------------------------+
 # ACQUISITION FRAMEWORKS
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.t_acquisition_frameworks TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.t_acquisition_frameworks TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.t_acquisition_frameworks FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.sinp_datatype_publications TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.sinp_datatype_publications TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.sinp_datatype_publications FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.t_bibliographical_references TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.t_bibliographical_references TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.t_bibliographical_references FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_voletsinp TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_voletsinp TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_acquisition_framework_voletsinp FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_territory TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_territory TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_acquisition_framework_territory FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_publication TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_publication TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_acquisition_framework_publication FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_objectif TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_objectif TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_acquisition_framework_objectif FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_actor TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_acquisition_framework_actor TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_acquisition_framework_actor FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
@@ -161,56 +166,56 @@ sudo -n -u "${pg_admin_name}" -s \
 sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "COPY gn_meta.t_datasets (
         id_dataset, unique_dataset_id, id_acquisition_framework, dataset_name, dataset_shortname,
-        dataset_desc, id_nomenclature_data_type, keywords, marine_domain, terrestrial_domain, 
-        id_nomenclature_dataset_objectif, bbox_west, bbox_east, bbox_south, bbox_north, 
+        dataset_desc, id_nomenclature_data_type, keywords, marine_domain, terrestrial_domain,
+        id_nomenclature_dataset_objectif, bbox_west, bbox_east, bbox_south, bbox_north,
 		id_nomenclature_collecting_method, id_nomenclature_data_origin, id_nomenclature_source_status,
-		id_nomenclature_resource_type, active, validable, id_digitizer, id_taxa_list, 
-        meta_create_date, meta_update_date) TO stdout WITH csv null AS E'\\\\N'" | 
+		id_nomenclature_resource_type, active, validable, id_digitizer, id_taxa_list,
+        meta_create_date, meta_update_date) TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.t_datasets FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.sinp_datatype_protocols TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.sinp_datatype_protocols TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.sinp_datatype_protocols FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_dataset_territory TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_dataset_territory TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_dataset_territory FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_dataset_protocol TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_dataset_protocol TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_dataset_protocol FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_meta.cor_dataset_actor TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_meta.cor_dataset_actor TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_meta.cor_dataset_actor FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
 # SYNTHESE
 
-# TODO: Add id_area_attachement to 1,5 millions observations with 
+# TODO: Add id_area_attachement to 1,5 millions observations with
 # id_nomenclature_info_geo_type code = 2 and id_area_attachment IS NULL.
 # For now, remove constaint.
 sudo -n -u "${pg_admin_name}" -s \
     psql -d "${dest_db_name}" -c "ALTER TABLE gn_synthese.synthese DROP CONSTRAINT IF EXISTS check_synthese_info_geo_type_id_area_attachment ;"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_synthese.defaults_nomenclatures_value TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_synthese.defaults_nomenclatures_value TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_synthese.defaults_nomenclatures_value FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_synthese.synthese TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_synthese.synthese TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_synthese.synthese FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "
         DELETE FROM gn_synthese.cor_area_synthese AS cas
         WHERE NOT EXISTS (
-            SELECT FROM gn_synthese.synthese AS s 
-            WHERE s.id_synthese = cas.id_synthese 
+            SELECT FROM gn_synthese.synthese AS s
+            WHERE s.id_synthese = cas.id_synthese
         ) ; "
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_synthese.cor_area_synthese TO stdout WITH csv null AS E'\\\\N'" | 
+    psql -d "${src_db_name}" -c "COPY gn_synthese.cor_area_synthese TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY gn_synthese.cor_area_synthese FROM stdin csv null AS E'\\\\N'"
 
 

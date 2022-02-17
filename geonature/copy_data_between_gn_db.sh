@@ -36,12 +36,25 @@ sudo -n -u "${pg_admin_name}" -s \
         utilisateurs.t_applications,
         utilisateurs.bib_organismes,
         utilisateurs.t_roles,
+        utilisateurs.cor_profil_for_app,
         gn_meta.t_acquisition_frameworks,
         gn_meta.t_datasets,
         gn_synthese.t_sources,
         gn_synthese.synthese,
         gn_synthese.cor_area_synthese
         CASCADE ;'
+
+#+-------------------------------------------------------------------------------------------------+
+# COMMONS
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "COPY gn_commons.t_parameters TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY gn_commons.t_parameters FROM stdin csv null AS E'\\\\N'"
+
+# TODO: see how to copy t_modules
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "COPY gn_commons.cor_module_dataset TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY gn_commons.cor_module_dataset FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
 # SOURCES
@@ -124,6 +137,10 @@ sudo -n -u "${pg_admin_name}" -s \
 sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "COPY utilisateurs.cor_role_app_profil TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.cor_role_app_profil FROM stdin csv null AS E'\\\\N'"
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "COPY utilisateurs.cor_profil_for_app TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY utilisateurs.cor_profil_for_app FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s psql -d "${dest_db_name}" -f "${SCRIPT_DIR}/default_permissions_sinp.sql"
 

@@ -214,10 +214,30 @@ sudo -n -u "${pg_admin_name}" -s \
             WHERE s.id_synthese = cas.id_synthese
         ) ; "
 
-sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_synthese.cor_area_synthese TO stdout WITH csv null AS E'\\\\N'" |
-    psql -d "${dest_db_name}" -c "COPY gn_synthese.cor_area_synthese FROM stdin csv null AS E'\\\\N'"
+# sudo -n -u "${pg_admin_name}" -s \
+#     psql -d "${src_db_name}" -c "COPY gn_synthese.cor_area_synthese TO stdout WITH csv null AS E'\\\\N'" |
+#     psql -d "${dest_db_name}" -c "COPY gn_synthese.cor_area_synthese FROM stdin csv null AS E'\\\\N'"
 
+# Reset all sequences in destination database
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${dest_db_name}" -c "
+CREATE OR REPLACE FUNCTION reset_sequence(table_schema text, tablename text, columnname text, sequence_name text)
+    RETURNS \"pg_catalog\".\"void\" AS
+    '
+      DECLARE
+      BEGIN
+
+      EXECUTE ''SELECT setval( '''''' || sequence_name  || '''''', '' || ''(SELECT MAX('' || columnname ||
+          '') FROM '' || table_schema || ''.''|| tablename || '')'' || ''+1)'';
+
+      END;
+    ' LANGUAGE 'plpgsql';"
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${dest_db_name}" -c "
+SELECT substring(column_default, '''(.*)'''),
+    reset_sequence(table_schema, table_name, column_name, substring(column_default, '''(.*)'''))
+FROM information_schema.columns WHERE column_default LIKE 'nextval%' ; "
 
 #+-------------------------------------------------------------------------------------------------+
 # Configure PSQL

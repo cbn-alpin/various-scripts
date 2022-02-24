@@ -32,6 +32,9 @@ function main() {
             --sourceMap=false
     else
         ./node_modules/.bin/ng serve \
+            --configuration=development \
+            --open false \
+            --ssl false \
             --port=4200 \
             --poll=2000
     fi

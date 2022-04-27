@@ -55,11 +55,11 @@ class Ajaris:
                         new_row = {
                             "cd_ref": row["cd_nom"],
                             "title": row["species"],
-                            "url": self._build_Url(row),
+                            "url": self._build_url(row),
                             "author": row["author"],
-                            "description": row["description"],
+                            "description": self._build_description(row["description"], row['num_photo']),
                             "date": self._transform_date(row["date"]),
-                            "source": f"CBNA - {row['num_photo']}",
+                            "source": "CBNA",
                             "licence": "CC BY-NC-SA",
                         }
                         writer.writerow(new_row)
@@ -77,10 +77,26 @@ class Ajaris:
         print_info(f"Number of entries in CSV files: {total_lines} ")
         return total_lines
 
-    def _build_Url(self, row):
-        url_base = f"http://www.cbn-alpin-icono.fr/Phototheque/media/img/displaybox"
+    def _build_url(self, row):
+        # Default URL : http://www.cbn-alpin-icono.fr/Phototheque/media/img/displaybox
+        url_base = f"https://img.biodiversite-aura.fr/cbna"
         url = f"{url_base}/{row['session_id']}/{row['doc_id']}.jpg"
         return url
+
+    def _build_description(self, desc, num_photo):
+        output = []
+        cleaned_desc = self._clean_description(desc)
+        if cleaned_desc:
+            output.append(cleaned_desc)
+        output.append(f"Id : {num_photo}")
+        return " ; ".join(output)
+
+    def _clean_description(self, desc):
+        return (desc
+            .replace('_Description : ', ' ; Description : ')
+            .replace('_Commentaire : ', ' ; Commentaire : ')
+            .replace('_Lieu : ', ' ; Lieu : ')
+        )
 
     def _transform_date(self, date):
         formated_date = "\\N"

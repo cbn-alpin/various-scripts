@@ -1,4 +1,4 @@
-# Script to transform files
+# Script de modification de fichiers
 
 
 Script CLI Python 3 transformant un fichier en entrée vers un nouveau format.
@@ -38,6 +38,10 @@ pointant vers `../transformer/runner.py`
   - Pour désactiver l'environnement virtuel :
   `exit` (`deactivate` ne fonctionne pas avec `pipenv`)
 
+### Plugins disponibles
+
+- PIFH : `pipenv run python ./bin/transform.py ~/Data/pifh/photos/ -o 2022-04-26_pifh_img_for_gn.csv -p pifh_img -c ./config/pifh_img.ini`
+- AJARIS : `pipenv run python ./bin/transform.py ./data/2022-04-26_ajaris_export.csv -o 2022-04-26_ajaris_for_gn.csv -p ajaris`
 
 ## Développement : préparation de l'espace de travail
 

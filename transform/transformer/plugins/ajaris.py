@@ -59,7 +59,7 @@ class Ajaris:
                             "author": row["author"],
                             "description": self._build_description(row["description"], row['num_photo']),
                             "date": self._transform_date(row["date"]),
-                            "source": "CBNA",
+                            "source": "CBNA (ICONO)",
                             "licence": "CC BY-NC-SA",
                         }
                         writer.writerow(new_row)
@@ -79,6 +79,7 @@ class Ajaris:
 
     def _build_url(self, row):
         # Default URL : http://www.cbn-alpin-icono.fr/Phototheque/media/img/displaybox
+        # md5 Nging : echo -n /cbna/433356233/21468.jpg | md5sum | awk '{print $1}'
         url_base = f"https://img.biodiversite-aura.fr/cbna"
         url = f"{url_base}/{row['session_id']}/{row['doc_id']}.jpg"
         return url

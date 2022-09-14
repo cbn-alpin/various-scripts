@@ -31,12 +31,13 @@ class PifhImg:
             """,
             re.VERBOSE,
         )
-
+        self.unduplicates = []
         self.authors = []
         self.organisms = []
         self.files_nbr = 0
         self.jpg_nbr = 0
         self.match_nbr = 0
+        self.duplicate_nbr = 0
         self.not_match_nbr = 0
         self.csv_write_row_nbr = 0
 
@@ -83,14 +84,14 @@ class PifhImg:
     def run(self):
         for self.filepath in glob.iglob(self.input + "/**/*.*", recursive=True):
             filename = os.path.basename(self.filepath)
-            filename = self._clean_filename(filename)
-            ext = os.path.splitext(filename)[1]
+            self.filename = self._clean_filename(filename)
+            ext = os.path.splitext(self.filename)[1]
             if re.match(r"^\.jpe?g$", ext, re.IGNORECASE):
                 self.jpg_nbr += 1
-                infos = self._extract_infos(filename)
+                infos = self._extract_infos(self.filename)
                 self._copy_file(infos)
             else:
-                print_error(f"Not JPEG file: {filename}")
+                print_error(f"Not JPEG file: {self.filename}")
             self.files_nbr += 1
         self._print_summary()
 
@@ -115,7 +116,8 @@ class PifhImg:
 
             self._distinct_infos(infos)
 
-            if infos["organism"] and infos["organism"] != "CBNA":
+            if (infos['md5'] not in self.unduplicates):
+                self.unduplicates.append(infos['md5'])
                 self.csv_write_row_nbr += 1
                 new_row = {
                     "cd_ref": infos["cd_nom"],
@@ -125,9 +127,12 @@ class PifhImg:
                     "description": self._build_description(infos),
                     "date": self._get_date_taken(),
                     "source": f"{infos['organism']}",
-                    "licence": "CC BY-NC-ND",
+                    "licence": self._build_licence(infos),
                 }
                 self._write_row(filename, new_row)
+            else:
+                self.duplicate_nbr += 1
+                print_error(f"Duplicate file: {self.filename}")
         else:
             self.not_match_nbr += 1
             print_error(f"Filename NOT match: {filename}")
@@ -159,7 +164,10 @@ class PifhImg:
         return value.replace("_", " ") if value else ""
 
     def _clean_organism(self, organism):
-        substitutes = {"AUCUN": "INCONNU"}
+        substitutes = {
+            "AUCUN": "INCONNU",
+            "CBNA": "CBNA (PIFH)",
+        }
         organism = "INCONNU" if organism == None else organism.upper()
         return (substitutes[organism] if organism in substitutes else organism)
 
@@ -167,15 +175,28 @@ class PifhImg:
         metadata = pyexiv2.ImageMetadata(self.filepath)
         metadata.read()
 
-        date = None
+        meta_date = None
         if 'Exif.Photo.DateTimeOriginal' in metadata:
-            date = metadata['Exif.Photo.DateTimeOriginal']
+            meta_date = metadata['Exif.Photo.DateTimeOriginal']
         elif 'Exif.Image.DateTimeOriginal' in metadata:
-            date = metadata['Exif.Image.DateTimeOriginal']
+            meta_date = metadata['Exif.Image.DateTimeOriginal']
 
         formated_date = "\\N"
-        if date:
-            formated_date = date.value.strftime("%Y-%m-%d %H:%M:%S")
+        if meta_date:
+            date = meta_date.value
+            if isinstance(date, str):
+                print(f"\tDate str: {date}")
+                if re.match(r'[12][90][0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}', date):
+                    formated_date = datetime.datetime.strptime(date, '%Y:%m:%d %H:%M:%S')
+                    print_info(f"\tDate str formated: {formated_date}")
+                else:
+                    print_error(f"\tDate str not match: '{date}' !")
+            elif isinstance(date, datetime.datetime) :
+                formated_date = date.strftime("%Y-%m-%d %H:%M:%S")
+                print_info(f"\tDate datetime formated: {formated_date}")
+            else:
+                print_error(f"Date type '{type(date)}' not match for {self.filepath} !")
+        print(f"\tDate formated: {formated_date}")
         return formated_date
 
     def _distinct_infos(self, infos):
@@ -186,7 +207,7 @@ class PifhImg:
 
     def _build_url(self, infos):
         url_base = f"https://img.biodiversite-aura.fr"
-        url = f"{url_base}/{infos['organism'].lower()}/{infos['md5_path']}.jpg"
+        url = f"{url_base}/{infos['organism'].split()[0].lower()}/{infos['md5_path']}.jpg"
         return url
 
     def _build_description(self, infos):
@@ -194,8 +215,14 @@ class PifhImg:
         if infos['id']:
             description.append(f"Notes : {infos['id']}")
         description.append(f"MD5 : {infos['md5']}")
+        description.append(f"Fichier : {self.filename}")
         return ' ; '.join(description)
 
+    def _build_licence(self, infos):
+        licence = "CC BY-NC-ND"
+        if infos['organism'].split()[0].lower() == 'cbna':
+            licence = "CC BY-NC-SA"
+        return licence
 
     def _write_row(self, filename, row):
         try:
@@ -212,11 +239,12 @@ class PifhImg:
 
     def _print_summary(self):
         self.authors.sort()
-        print(f"Authors: {json.dumps(self.authors, indent=4)}")
+        print(f"Authors: {json.dumps(self.authors, indent=4, ensure_ascii=False)}")
         self.organisms.sort()
-        print(f"Organims: {json.dumps(self.organisms, indent=4)}")
+        print(f"Organims: {json.dumps(self.organisms, indent=4, ensure_ascii=False)}")
         print_info(f"Number of JPEG finded: {self.jpg_nbr} jpg / {self.files_nbr} files")
         print_info(f"Number of file name NOT matched: {self.not_match_nbr} / {self.match_nbr}")
+        print_info(f"Number of file name DUPLICATED:  {self.duplicate_nbr}")
         print_info(f"Number of output CSV row writed: {self.csv_write_row_nbr} / {self.files_nbr}")
 
     def _clean_filename(self, filename):

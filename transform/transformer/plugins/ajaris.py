@@ -15,6 +15,18 @@ class Ajaris:
         self._set_ouput_fieldnames()
         self._register_dialect()
 
+        self.media_types = {
+            "photo_main": "1",
+            "photo_alt": "2",
+            "web_page": "3",
+            "pdf": "4",
+            "audio": "5",
+            "video_file": "6",
+            "video_youtube": "7",
+            "video_dailymotion": "8",
+            "video_vimeo": "9",
+        }
+
     def _set_ouput_fieldnames(self):
         self.output_fieldnames = [
             "cd_ref",
@@ -23,6 +35,7 @@ class Ajaris:
             "author",
             "description",
             "date",
+            "type",
             "source",
             "licence",
         ]
@@ -59,6 +72,7 @@ class Ajaris:
                             "author": row["author"],
                             "description": self._build_description(row["description"], row['num_photo']),
                             "date": self._transform_date(row["date"]),
+                            "type": self._build_type(row),
                             "source": "CBNA (ICONO)",
                             "licence": "CC BY-NC-SA",
                         }
@@ -80,7 +94,7 @@ class Ajaris:
     def _build_url(self, row):
         # Default URL : http://www.cbn-alpin-icono.fr/Phototheque/media/img/displaybox
         # md5 Nging : echo -n /cbna/433356233/21468.jpg | md5sum | awk '{print $1}'
-        url_base = f"https://img.biodiversite-aura.fr/cbna"
+        url_base = Config.get('base_url')
         url = f"{url_base}/{row['session_id']}/{row['doc_id']}.jpg"
         return url
 
@@ -118,3 +132,13 @@ class Ajaris:
         except ValueError:
             is_valid_date = False
         return is_valid_date
+
+    def _build_type(self, row):
+        media_type = self.media_types["photo_alt"]
+        if "type" in row:
+            type = row["type"]
+            if type in self.media_types:
+                media_type = self.media_types[type]
+            else:
+                print_error(f"Media type '{type}' is not supported!")
+        return media_type

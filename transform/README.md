@@ -41,7 +41,8 @@ pointant vers `../transformer/runner.py`
 ### Plugins disponibles
 
 - PIFH : `pipenv run python ./bin/transform.py ~/Data/pifh/photos/ -o 2022-04-26_pifh_img_for_gn.csv -p pifh_img -c ./config/pifh_img.ini`
-- AJARIS : `pipenv run python ./bin/transform.py ./data/2022-04-26_ajaris_export.csv -o 2022-04-26_ajaris_for_gn.csv -p ajaris`
+- AJARIS (SINP AURA): `pipenv run python ./bin/transform.py ./data/2022-04-26_ajaris_export.csv -o 2022-04-26_ajaris_for_gn.csv -p ajaris -c ./config/ajaris_aura.ini`
+- AJARIS (Flore Sentinelle): `pipenv run python ./bin/transform.py ./data/2022-11-16_ajaris_export_scalp.csv -o 2022-11-16_ajaris_scalp_for_gn.csv -p ajaris -c ./config/ajaris_floresentinelle.ini`
 
 ## Développement : préparation de l'espace de travail
 

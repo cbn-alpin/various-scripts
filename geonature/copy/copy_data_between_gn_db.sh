@@ -6,14 +6,13 @@ set -euo pipefail
 #+-------------------------------------------------------------------------------------------------+
 # Config
 readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-pg_admin_name="jpmilcent"
-src_db_name="gn2_dev_sinp"
-dest_db_name="gn2_default"
+pg_admin_name="${USER}"
+src_db_name="${1-gn2_sinp_paca}"
+dest_db_name="${2-gn2_default}"
 
 #+-------------------------------------------------------------------------------------------------+
 # Load utils
-script_path=$(realpath "${BASH_SOURCE[0]}")
-source "$(realpath "${script_path%/*}")/lib_utils.bash"
+source "${SCRIPT_DIR}/../../shared/lib/utils.bash"
 
 checkSuperuser
 
@@ -43,18 +42,6 @@ sudo -n -u "${pg_admin_name}" -s \
         gn_synthese.synthese,
         gn_synthese.cor_area_synthese
         CASCADE ;'
-
-#+-------------------------------------------------------------------------------------------------+
-# COMMONS
-sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_commons.t_parameters TO stdout WITH csv null AS E'\\\\N'" |
-    psql -d "${dest_db_name}" -c "COPY gn_commons.t_parameters FROM stdin csv null AS E'\\\\N'"
-
-# TODO: see how to copy t_modules
-
-sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_commons.cor_module_dataset TO stdout WITH csv null AS E'\\\\N'" |
-    psql -d "${dest_db_name}" -c "COPY gn_commons.cor_module_dataset FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
 # SOURCES
@@ -142,7 +129,7 @@ sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "COPY utilisateurs.cor_profil_for_app TO stdout WITH csv null AS E'\\\\N'" |
     psql -d "${dest_db_name}" -c "COPY utilisateurs.cor_profil_for_app FROM stdin csv null AS E'\\\\N'"
 
-sudo -n -u "${pg_admin_name}" -s psql -d "${dest_db_name}" -f "${SCRIPT_DIR}/default_permissions_sinp.sql"
+sudo -n -u "${pg_admin_name}" -s psql -d "${dest_db_name}" -f "${SCRIPT_DIR}/../sql/default_permissions_sinp.sql"
 
 #+-------------------------------------------------------------------------------------------------+
 # ACQUISITION FRAMEWORKS
@@ -255,6 +242,18 @@ sudo -n -u "${pg_admin_name}" -s \
 SELECT substring(column_default, '''(.*)'''),
     reset_sequence(table_schema, table_name, column_name, substring(column_default, '''(.*)'''))
 FROM information_schema.columns WHERE column_default LIKE 'nextval%' ; "
+
+#+-------------------------------------------------------------------------------------------------+
+# COMMONS
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "COPY gn_commons.t_parameters TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY gn_commons.t_parameters FROM stdin csv null AS E'\\\\N'"
+
+# TODO: see how to copy t_modules
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${src_db_name}" -c "COPY gn_commons.cor_module_dataset TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY gn_commons.cor_module_dataset FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
 # Configure PSQL

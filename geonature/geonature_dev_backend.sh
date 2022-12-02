@@ -45,7 +45,12 @@ function main() {
     # Run GeoNature in DEV mode with extra options for Gunicorn and Flask
     export GUNICORN_CMD_ARGS="--capture-output --log-level debug";
     # FLASK_ENV see: https://flask.palletsprojects.com/en/2.0.x/config/#environment-and-debug-features
-    export FLASK_ENV="development";
+    flask_version="$(flask --version|grep Flask|cut -d' ' -f2)"
+    if version_gt "${flask_version}" "2.2.0"; then
+        export FLASK_DEBUG=1;
+    else
+        export FLASK_ENV="development";
+    fi
     # To avoid GDAL debug message. Not necessary anymore (?).
     #export GDAL_DATA="${venv_dir}/lib/python3.7/site-packages/fiona/gdal_data"
     geonature dev_back

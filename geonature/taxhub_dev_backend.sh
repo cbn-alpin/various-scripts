@@ -17,13 +17,40 @@ function main() {
     local readonly version=$(cat "${bck_dir}/VERSION")
     echo "TaxHub version: ${version}"
 
+    # Deactivate Pyenv
+    if command -v pyenv 1>/dev/null 2>&1; then
+        echo "Deactivate Pyenv (remove from PATH) => using venv !"
+        PATH=`echo $PATH | tr ':' '\n' | sed '/pyenv/d' | tr '\n' ':' | sed -r 's/:$/\n/'`
+    fi
+
+    # Activate venv
+    source "${venv_dir}/bin/activate"
+
+    in_venv=$(python3 -c 'import sys; print ("1" if (hasattr(sys, "real_prefix") or
+            (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)) else "0")')
+    if [[ "${in_venv}" == "0" ]] && [[ "${VIRTUAL_ENV}" == "${venv_dir}" ]]; then
+        echo "Python return false but env variable true ! Force true."
+        in_venv="1"
+    fi
+    if [[ "${in_venv}" == "1" ]]; then
+        echo "Python venv activated : ${VIRTUAL_ENV}"
+    else
+        echo "Python venv not activated: ${in_venv}!"
+    fi
+
+    # Go to backend directory (optional)
+    cd ${bck_dir}
+
     if version_gt "${version}" "1.8.0"; then
-        cd "${bck_dir}"
-
-        export FLASK_ENV=development
-        export FLASK_DEBUG=1
-
-        source "${bck_dir}/venv/bin/activate"
+        if [[ -f "${bck_dir}/.flaskenv" ]]; then
+            echo "Using .flaskenv:"
+            cat "${bck_dir}/.flaskenv" | sed -e "s/^/\t/"
+        else
+            echo "No .flaskenv, use env variables..."
+            export FLASK_ENV=development
+            export FLASK_DEBUG=1
+        fi
+        echo "Run Flask:"
         flask run --port=5000
     else
         # Check Supervisor conf and fix it if necessary
@@ -43,12 +70,6 @@ function main() {
                 sudo supervisorctl stop all
             fi
         fi
-
-        # Activate the virtualenv
-        source "${venv_dir}/bin/activate"
-
-        # Go to GeoNature backend directory (optional)
-        cd ${bck_dir}
 
         # Run GeoNature in DEV mode with extra options for Gunicorn and Flask
         export GUNICORN_CMD_ARGS="--capture-output --log-level debug";

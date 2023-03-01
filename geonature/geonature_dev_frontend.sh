@@ -21,14 +21,14 @@ function main() {
     nvm use;
 
     echo "Run GeoNature Angular server in Dev mode"
-    if ! version_gt "${version}" "2.9.2"; then
+    if ! version_gt "${version}" "2.8.1"; then
         ./node_modules/.bin/ng serve \
             --port=4200 \
             --poll=2000 \
             --aot=false \
             --optimization=false \
             --progress=true \
-            --sourceMap=false
+            --sourceMap=true
     else
         ./node_modules/.bin/ng serve \
             --configuration=development \
@@ -37,7 +37,7 @@ function main() {
             --port=4200 \
             --poll=2000 \
             --live-reload true \
-            --open true
+            --open false
     fi
 }
 

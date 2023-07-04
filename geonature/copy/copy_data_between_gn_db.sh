@@ -46,8 +46,12 @@ sudo -n -u "${pg_admin_name}" -s \
 #+-------------------------------------------------------------------------------------------------+
 # SOURCES
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY gn_synthese.t_sources TO stdout WITH csv null AS E'\\\\N'" |
-    psql -d "${dest_db_name}" -c "COPY gn_synthese.t_sources FROM stdin csv null AS E'\\\\N'"
+    psql -d "${src_db_name}" -c "COPY gn_synthese.t_sources (
+        id_source, name_source, desc_source, entity_source_pk_field, url_source,
+        meta_create_date, meta_update_date) TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY gn_synthese.t_sources (
+        id_source, name_source, desc_source, entity_source_pk_field, url_source,
+        meta_create_date, meta_update_date) FROM stdin csv null AS E'\\\\N'"
 
 #+-------------------------------------------------------------------------------------------------+
 # ORGANISMS
@@ -92,8 +96,14 @@ sudo -n -u "${pg_admin_name}" -s \
     psql -d "${dest_db_name}" -c "COPY ref_geo.bib_areas_types FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
-    psql -d "${src_db_name}" -c "COPY ref_geo.l_areas TO stdout WITH csv null AS E'\\\\N'" |
-    psql -d "${dest_db_name}" -c "COPY ref_geo.l_areas FROM stdin csv null AS E'\\\\N'"
+    psql -d "${src_db_name}" -c "COPY ref_geo.l_areas (
+        id_area, id_type, area_name, area_code, geom, centroid, geojson_4326, source, comment,
+        enable, additional_data, meta_create_date, meta_update_date
+    ) TO stdout WITH csv null AS E'\\\\N'" |
+    psql -d "${dest_db_name}" -c "COPY ref_geo.l_areas (
+        id_area, id_type, area_name, area_code, geom, centroid, geojson_4326, source, comment,
+        enable, additional_data, meta_create_date, meta_update_date
+    ) FROM stdin csv null AS E'\\\\N'"
 
 sudo -n -u "${pg_admin_name}" -s \
     psql -d "${src_db_name}" -c "COPY ref_geo.li_grids TO stdout WITH csv null AS E'\\\\N'" |

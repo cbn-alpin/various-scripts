@@ -6,15 +6,15 @@ set -euo pipefail
 #+-------------------------------------------------------------------------------------------------+
 # Config
 readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-pg_admin_name="jpmilcent"
-src_db_name="gn2_default_big"
-dest_db_name="gn2_default"
-area_code="05004"
+pg_admin_name="${USER}"
+src_db_name="${1-gn2_sinp_paca}"
+dest_db_name="${2-gn2_default}"
+area_code="${3-05004}"
 
 #+-------------------------------------------------------------------------------------------------+
 # Load utils
 script_path=$(realpath "${BASH_SOURCE[0]}")
-source "$(realpath "${script_path%/*}")/lib_utils.bash"
+source "${SCRIPT_DIR}/../../shared/lib/utils.bash"
 
 checkSuperuser
 
@@ -269,6 +269,27 @@ sudo -n -u "${pg_admin_name}" -s \
     "
     LOCK TABLE gn_synthese.t_sources IN EXCLUSIVE MODE;
     SELECT setval('gn_synthese.t_sources_id_source_seq', COALESCE((SELECT MAX(id_source)+1 FROM gn_synthese.t_sources), 1), false);
+    "
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${dest_db_name}" -c \
+    "
+    LOCK TABLE gn_meta.t_acquisition_frameworks IN EXCLUSIVE MODE;
+    SELECT setval('gn_meta.t_acquisition_frameworks_id_acquisition_framework_seq', COALESCE((SELECT MAX(id_acquisition_framework)+1 FROM gn_meta.t_acquisition_frameworks), 1), false);
+    "
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${dest_db_name}" -c \
+    "
+    LOCK TABLE gn_meta.t_datasets IN EXCLUSIVE MODE;
+    SELECT setval('gn_meta.t_datasets_id_dataset_seq', COALESCE((SELECT MAX(id_dataset)+1 FROM gn_meta.t_datasets), 1), false);
+    "
+
+sudo -n -u "${pg_admin_name}" -s \
+    psql -d "${dest_db_name}" -c \
+    "
+    LOCK TABLE gn_meta.cor_acquisition_framework_actor IN EXCLUSIVE MODE;
+    SELECT setval('gn_meta.cor_acquisition_framework_actor_id_cafa_seq', COALESCE((SELECT MAX(id_cafa)+1 FROM gn_meta.cor_acquisition_framework_actor), 1), false);
     "
 
 sudo -n -u "${pg_admin_name}" -s \

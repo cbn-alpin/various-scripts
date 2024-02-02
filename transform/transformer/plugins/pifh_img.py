@@ -53,6 +53,7 @@ class PifhImg:
             "author",
             "description",
             "date",
+            "type",
             "source",
             "licence",
         ]
@@ -112,12 +113,12 @@ class PifhImg:
                 "organism": self._clean_organism(match.group(4)),
                 "id": self._clean_value(match.group(5)),
             }
-            #print(infos)
+            # print(infos)
 
             self._distinct_infos(infos)
 
-            if (infos['md5'] not in self.unduplicates):
-                self.unduplicates.append(infos['md5'])
+            if infos["md5"] not in self.unduplicates:
+                self.unduplicates.append(infos["md5"])
                 self.csv_write_row_nbr += 1
                 new_row = {
                     "cd_ref": infos["cd_nom"],
@@ -126,6 +127,7 @@ class PifhImg:
                     "author": infos["author"],
                     "description": self._build_description(infos),
                     "date": self._get_date_taken(),
+                    "type": 2,
                     "source": f"{infos['organism']}",
                     "licence": self._build_licence(infos),
                 }
@@ -156,9 +158,9 @@ class PifhImg:
         return "/".join(path)
 
     def _clean_author(self, author):
-        substitutes = Config.get('substitutes.authors')
+        substitutes = Config.get("substitutes.authors")
         author = "ANONYME" if author == None else self._clean_value(author)
-        return (substitutes[author] if author in substitutes else author)
+        return substitutes[author] if author in substitutes else author
 
     def _clean_value(self, value):
         return value.replace("_", " ") if value else ""
@@ -169,29 +171,34 @@ class PifhImg:
             "CBNA": "CBNA (PIFH)",
         }
         organism = "INCONNU" if organism == None else organism.upper()
-        return (substitutes[organism] if organism in substitutes else organism)
+        return substitutes[organism] if organism in substitutes else organism
 
     def _get_date_taken(self):
         metadata = pyexiv2.ImageMetadata(self.filepath)
         metadata.read()
 
         meta_date = None
-        if 'Exif.Photo.DateTimeOriginal' in metadata:
-            meta_date = metadata['Exif.Photo.DateTimeOriginal']
-        elif 'Exif.Image.DateTimeOriginal' in metadata:
-            meta_date = metadata['Exif.Image.DateTimeOriginal']
+        if "Exif.Photo.DateTimeOriginal" in metadata:
+            meta_date = metadata["Exif.Photo.DateTimeOriginal"]
+        elif "Exif.Image.DateTimeOriginal" in metadata:
+            meta_date = metadata["Exif.Image.DateTimeOriginal"]
 
         formated_date = "\\N"
         if meta_date:
             date = meta_date.value
             if isinstance(date, str):
                 print(f"\tDate str: {date}")
-                if re.match(r'[12][90][0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}', date):
-                    formated_date = datetime.datetime.strptime(date, '%Y:%m:%d %H:%M:%S')
+                if re.match(
+                    r"[12][90][0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}",
+                    date,
+                ):
+                    formated_date = datetime.datetime.strptime(
+                        date, "%Y:%m:%d %H:%M:%S"
+                    )
                     print_info(f"\tDate str formated: {formated_date}")
                 else:
                     print_error(f"\tDate str not match: '{date}' !")
-            elif isinstance(date, datetime.datetime) :
+            elif isinstance(date, datetime.datetime):
                 formated_date = date.strftime("%Y-%m-%d %H:%M:%S")
                 print_info(f"\tDate datetime formated: {formated_date}")
             else:
@@ -207,20 +214,22 @@ class PifhImg:
 
     def _build_url(self, infos):
         url_base = f"https://img.biodiversite-aura.fr"
-        url = f"{url_base}/{infos['organism'].split()[0].lower()}/{infos['md5_path']}.jpg"
+        url = (
+            f"{url_base}/{infos['organism'].split()[0].lower()}/{infos['md5_path']}.jpg"
+        )
         return url
 
     def _build_description(self, infos):
         description = []
-        if infos['id']:
+        if infos["id"]:
             description.append(f"Notes : {infos['id']}")
         description.append(f"MD5 : {infos['md5']}")
         description.append(f"Fichier : {self.filename}")
-        return ' ; '.join(description)
+        return " ; ".join(description)
 
     def _build_licence(self, infos):
         licence = "CC BY-NC-ND"
-        if infos['organism'].split()[0].lower() == 'cbna':
+        if infos["organism"].split()[0].lower() == "cbna":
             licence = "CC BY-NC-SA"
         return licence
 
@@ -233,7 +242,14 @@ class PifhImg:
     def _copy_file(self, infos):
         if infos:
             src = self.filepath
-            dst = os.path.dirname(self.output) + "/" + infos['organism'].lower() + "/" + infos["md5_path"] + '.jpg'
+            dst = (
+                os.path.dirname(self.output)
+                + "/"
+                + infos["organism"].lower()
+                + "/"
+                + infos["md5_path"]
+                + ".jpg"
+            )
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy2(src, dst)
 
@@ -242,11 +258,17 @@ class PifhImg:
         print(f"Authors: {json.dumps(self.authors, indent=4, ensure_ascii=False)}")
         self.organisms.sort()
         print(f"Organims: {json.dumps(self.organisms, indent=4, ensure_ascii=False)}")
-        print_info(f"Number of JPEG finded: {self.jpg_nbr} jpg / {self.files_nbr} files")
-        print_info(f"Number of file name NOT matched: {self.not_match_nbr} / {self.match_nbr}")
+        print_info(
+            f"Number of JPEG finded: {self.jpg_nbr} jpg / {self.files_nbr} files"
+        )
+        print_info(
+            f"Number of file name NOT matched: {self.not_match_nbr} / {self.match_nbr}"
+        )
         print_info(f"Number of file name DUPLICATED:  {self.duplicate_nbr}")
-        print_info(f"Number of output CSV row writed: {self.csv_write_row_nbr} / {self.files_nbr}")
+        print_info(
+            f"Number of output CSV row writed: {self.csv_write_row_nbr} / {self.files_nbr}"
+        )
 
     def _clean_filename(self, filename):
-        substitutes = Config.get('substitutes.filenames')
-        return (substitutes[filename] if filename in substitutes else filename)
+        substitutes = Config.get("substitutes.filenames")
+        return substitutes[filename] if filename in substitutes else filename

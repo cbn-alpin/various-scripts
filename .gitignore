@@ -1,9 +1,8 @@
 .vscode/
 *.code-workspace
-venv/
-
-var/
-logs/
-settings.ini
 *.log
 *.tmp.sql
+logs/
+settings.ini
+var/
+venv/

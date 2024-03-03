@@ -77,8 +77,8 @@ INSERT INTO gn_meta.cor_acquisition_framework_actor (
     id_organism,
     id_nomenclature_actor_role
 ) VALUES (
-    gn_meta.get_id_acquisition_framework('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
-    utilisateurs.get_id_organization('f80af199-2873-499a-b4e1-99078873fb47'), -- CBNA
+    gn_meta.get_id_acquisition_framework_by_uuid('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
+    utilisateurs.get_id_organism_by_uuid('f80af199-2873-499a-b4e1-99078873fb47'), -- CBNA
     ref_nomenclatures.get_id_nomenclature('ROLE_ACTEUR', '1') -- Contact principal
 )
 ON CONFLICT ON CONSTRAINT check_is_unique_cor_acquisition_framework_actor_organism DO NOTHING ;
@@ -91,11 +91,11 @@ INSERT INTO gn_meta.cor_acquisition_framework_objectif (
     id_nomenclature_objectif
 ) VALUES
     (
-        gn_meta.get_id_acquisition_framework('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
+        gn_meta.get_id_acquisition_framework_by_uuid('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
         ref_nomenclatures.get_id_nomenclature('CA_OBJECTIFS', '8') -- Inventaire espèce
     ),
     (
-        gn_meta.get_id_acquisition_framework('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
+        gn_meta.get_id_acquisition_framework_by_uuid('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
         ref_nomenclatures.get_id_nomenclature('CA_OBJECTIFS', '11') -- Multiples ou autres
     )
 ON CONFLICT ON CONSTRAINT pk_cor_acquisition_framework_objectif DO NOTHING ;
@@ -108,7 +108,7 @@ INSERT INTO gn_meta.cor_acquisition_framework_voletsinp (
     id_nomenclature_voletsinp
 ) VALUES
     (
-        gn_meta.get_id_acquisition_framework('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
+        gn_meta.get_id_acquisition_framework_by_uuid('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
         ref_nomenclatures.get_id_nomenclature('VOLET_SINP', '1') -- Terre
     )
 ON CONFLICT ON CONSTRAINT pk_cor_acquisition_framework_voletsinp DO NOTHING ;
@@ -139,8 +139,8 @@ INSERT INTO gn_meta.t_datasets (
     validable
 )
 SELECT
-    'b3988db2-2c94-4e1f-86f3-3a7184fc5f71',
-    gn_meta.get_id_acquisition_framework('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
+    '${gn2gn_dataset_uuid}',
+    gn_meta.get_id_acquisition_framework_by_uuid('54d26761-2859-49d2-bb87-ef97448c8a27'), -- Observations Flore (CBNA)
     'Données flore du CBNA',
     'DFCBNA',
     'Ensemble des données flore du CBNA pour test.',
@@ -162,7 +162,7 @@ SELECT
 WHERE NOT EXISTS(
     SELECT 'X'
     FROM gn_meta.t_datasets AS td
-    WHERE td.unique_dataset_id = 'b3988db2-2c94-4e1f-86f3-3a7184fc5f71'
+    WHERE td.unique_dataset_id = '${gn2gn_dataset_uuid}'
 ) ;
 
 
@@ -174,8 +174,8 @@ INSERT INTO gn_meta.cor_dataset_actor (
     id_nomenclature_actor_role
 ) VALUES
     (
-        gn_meta.get_id_dataset('b3988db2-2c94-4e1f-86f3-3a7184fc5f71'), -- DFCBNA
-        utilisateurs.get_id_organization('f80af199-2873-499a-b4e1-99078873fb47'), -- CBNA
+        gn_meta.get_id_dataset_by_uuid('b3988db2-2c94-4e1f-86f3-3a7184fc5f71'), -- DFCBNA
+        utilisateurs.get_id_organism_by_uuid('f80af199-2873-499a-b4e1-99078873fb47'), -- CBNA
         ref_nomenclatures.get_id_nomenclature('ROLE_ACTEUR', '1') -- Contact principal
     )
 ON CONFLICT ON CONSTRAINT check_is_unique_cor_dataset_actor_organism DO NOTHING ;
@@ -188,8 +188,8 @@ INSERT INTO gn_commons.cor_module_dataset (
     id_dataset
 ) VALUES
     (
-        gn_commons.get_id_module('SYNTHESE'),
-        gn_meta.get_id_dataset('b3988db2-2c94-4e1f-86f3-3a7184fc5f71') -- DFCBNA
+        gn_commons.get_id_module_by_code('SYNTHESE'),
+        gn_meta.get_id_dataset_by_uuid('b3988db2-2c94-4e1f-86f3-3a7184fc5f71') -- DFCBNA
     )
 ON CONFLICT ON CONSTRAINT pk_cor_module_dataset DO NOTHING ;
 
@@ -202,13 +202,13 @@ INSERT INTO gn_synthese.t_sources (
     entity_source_pk_field
 )
 SELECT
-    'IMPORT-PARTIAL-${area_code}',
-    'Partial import from ${src_db_name} for area_code ${area_code}.',
+    '${gn2gn_source}',
+    'Partial import from ${gn2gn_pg_db_src} for area_code ${gn2gn_areas_protected}.',
     'id_synthese'
 WHERE NOT EXISTS(
     SELECT 'X'
     FROM gn_synthese.t_sources AS ts
-    WHERE ts.name_source = 'CBNA_EXPORT'
+    WHERE ts.name_source = '${gn2gn_source}'
 ) ;
 
 

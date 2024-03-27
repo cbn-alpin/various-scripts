@@ -16,6 +16,7 @@ Usage: ./$(basename $BASH_SOURCE)[options]
      -v | --verbose: display more infos
      -x | --debug: display debug script infos
      -c | --config: name of config file to use with this script
+     -p | --port: set Angular development server port. Default: 4200.
 EOF
     exit 0
 }
@@ -32,17 +33,19 @@ function parseScriptOptions() {
             "--verbose") set -- "${@}" "-v" ;;
             "--debug") set -- "${@}" "-x" ;;
             "--config") set -- "${@}" "-c" ;;
+            "--port") set -- "${@}" "-p" ;;
             "--"*) exitScript "ERROR : parameter '${arg}' invalid ! Use -h option to know more." 1 ;;
             *) set -- "${@}" "${arg}"
         esac
     done
 
-    while getopts "hvxc:" option; do
+    while getopts "hvxc:p:" option; do
         case "${option}" in
             "h") printScriptUsage ;;
             "v") readonly verbose=true ;;
             "x") readonly debug=true; set -x ;;
             "c") setting_file_path="${OPTARG}" ;;
+            "p") ng_serve_port="${OPTARG}" ;;
             *) exitScript "ERROR : parameter invalid ! Use -h option to know more." 1 ;;
         esac
     done
@@ -64,7 +67,12 @@ function main() {
     parseScriptOptions "${@}"
     loadScriptConfig "${setting_file_path-}"
 
+    initializeDefaultVariable
     runGeoNatureFrontendServer
+}
+
+function initializeDefaultVariable() {
+    ng_serve_port=${ng_serve_port-"4200"}
 }
 
 function runGeoNatureFrontendServer() {
@@ -83,7 +91,7 @@ function runGeoNatureFrontendServer() {
     printMsg "Run GeoNature Angular server in Dev mode"
     if ! isVersionGreaterThan "${version}" "2.8.1"; then
         ./node_modules/.bin/ng serve \
-            --port=4200 \
+            --port=${ng_serve_port} \
             --poll=2000 \
             --aot=false \
             --optimization=false \
@@ -94,7 +102,7 @@ function runGeoNatureFrontendServer() {
             --configuration=development \
             --open false \
             --ssl false \
-            --port=4200 \
+            --port=${ng_serve_port} \
             --poll=2000 \
             --live-reload true \
             --open false

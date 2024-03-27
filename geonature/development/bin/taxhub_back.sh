@@ -16,6 +16,7 @@ Usage: ./$(basename $BASH_SOURCE)[options]
      -v | --verbose: display more infos
      -x | --debug: display debug script infos
      -c | --config: name of config file to use with this script
+     -p | --port: set Flask development server port. Default: 5000.
 EOF
     exit 0
 }
@@ -32,17 +33,19 @@ function parseScriptOptions() {
             "--verbose") set -- "${@}" "-v" ;;
             "--debug") set -- "${@}" "-x" ;;
             "--config") set -- "${@}" "-c" ;;
+            "--port") set -- "${@}" "-p" ;;
             "--"*) exitScript "ERROR : parameter '${arg}' invalid ! Use -h option to know more." 1 ;;
             *) set -- "${@}" "${arg}"
         esac
     done
 
-    while getopts "hvxc:" option; do
+    while getopts "hvxc:p:" option; do
         case "${option}" in
             "h") printScriptUsage ;;
             "v") readonly verbose=true ;;
             "x") readonly debug=true; set -x ;;
             "c") setting_file_path="${OPTARG}" ;;
+            "p") flask_port="${OPTARG}" ;;
             *) exitScript "ERROR : parameter invalid ! Use -h option to know more." 1 ;;
         esac
     done
@@ -65,7 +68,12 @@ function main() {
     loadScriptConfig "${setting_file_path-}"
     source "${lib_dir}/development.bash"
 
+    initializeDefaultVariables
     runBackendServer
+}
+
+function initializeDefaultVariables() {
+    flask_port="${flask_port-5000}"
 }
 
 function runBackendServer() {
@@ -84,7 +92,7 @@ function runBackendServer() {
 
     if isVersionGreaterThan "${version}" "1.8.0"; then
         export FLASK_APP="apptax.app:create_app"
-        export FLASK_RUN_PORT="5000"
+        export FLASK_RUN_PORT="${flask_port}"
         runFlaskServer
     else
         stopSupervisor

@@ -11,7 +11,7 @@ set -euo pipefail
 # OUTS: None
 function printScriptUsage() {
     cat << EOF
-Usage: ./$(basename $BASH_SOURCE)[options]
+Usage: ./$(basename $BASH_SOURCE)[options] <current-geonature-frontend-path>
      -h | --help: display this help
      -v | --verbose: display more infos
      -x | --debug: display debug script infos
@@ -65,11 +65,12 @@ function main() {
     loadScriptConfig "${setting_file_path-}"
     source "${lib_dir}/development.bash"
 
-    runCompodoc
+    runCompodoc "${@}"
 }
 
 function runCompodoc() {
-    readonly front_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/geonature/frontend"})
+    local readonly arg_path="${@: -1}"
+    readonly front_dir=$(realpath ${arg_path:-"/home/${USER}/workspace/geonature/web/geonature/frontend"})
     printMsg "Path used: ${front_dir}"
 
     printVerbose "Go to GeoNature frontend directory"

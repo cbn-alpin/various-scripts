@@ -11,7 +11,7 @@ set -euo pipefail
 # OUTS: None
 function printScriptUsage() {
     cat << EOF
-Usage: ./$(basename $BASH_SOURCE)[options]
+Usage: ./$(basename $BASH_SOURCE)[options] <current-geonature-backend-path>
      -h | --help: display this help
      -v | --verbose: display more infos
      -x | --debug: display debug script infos
@@ -69,7 +69,7 @@ function main() {
     source "${lib_dir}/development.bash"
 
     initializeDefaultVariables
-    runGeoNatureBackendServer
+    runGeoNatureBackendServer "${@}"
 }
 
 function initializeDefaultVariables() {
@@ -77,7 +77,8 @@ function initializeDefaultVariables() {
 }
 
 function runGeoNatureBackendServer() {
-    local readonly bck_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/geonature/backend"})
+    local readonly arg_path="${@: -1}"
+    local readonly bck_dir=$(realpath ${arg_path:-"/home/${USER}/workspace/geonature/web/geonature/backend"})
     printMsg "Path used: ${bck_dir}"
     local readonly venv_dir="${bck_dir}/venv"
     local readonly version=$(cat "${bck_dir}/../VERSION")

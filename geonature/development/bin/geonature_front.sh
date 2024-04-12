@@ -11,7 +11,7 @@ set -euo pipefail
 # OUTS: None
 function printScriptUsage() {
     cat << EOF
-Usage: ./$(basename $BASH_SOURCE)[options]
+Usage: ./$(basename $BASH_SOURCE)[options] <current-geonature-fontend-path>
      -h | --help: display this help
      -v | --verbose: display more infos
      -x | --debug: display debug script infos
@@ -68,7 +68,7 @@ function main() {
     loadScriptConfig "${setting_file_path-}"
 
     initializeDefaultVariable
-    runGeoNatureFrontendServer
+    runGeoNatureFrontendServer "${@}"
 }
 
 function initializeDefaultVariable() {
@@ -76,7 +76,8 @@ function initializeDefaultVariable() {
 }
 
 function runGeoNatureFrontendServer() {
-    local readonly front_dir=$(realpath ${1:-"/home/${USER}/workspace/geonature/web/geonature/frontend"})
+    local readonly arg_path="${@: -1}"
+    local readonly front_dir=$(realpath ${arg_path:-"/home/${USER}/workspace/geonature/web/geonature/frontend"})
     printMsg "Path used: ${front_dir}"
     local readonly version=$(cat "${front_dir}/../VERSION")
     printMsg "GeoNature version: ${version}"

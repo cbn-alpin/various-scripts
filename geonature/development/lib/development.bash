@@ -10,6 +10,8 @@ function deactivatePyenv() {
 }
 
 function activateVenv() {
+    local readonly venv_dir="${1}"
+
     printMsg "Activate Python venv:"
     source "${venv_dir}/bin/activate"
 

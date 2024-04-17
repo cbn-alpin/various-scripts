@@ -89,7 +89,7 @@ function runBackendServer() {
 
     deactivatePyenv
 
-    activateVenv
+    activateVenv "${venv_dir}"
 
     if isVersionGreaterThan "${version}" "1.8.0"; then
         export FLASK_APP="apptax.app:create_app"

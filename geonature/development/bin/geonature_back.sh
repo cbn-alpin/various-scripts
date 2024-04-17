@@ -93,7 +93,7 @@ function runGeoNatureBackendServer() {
 
     deactivatePyenv
 
-    activateVenv
+    activateVenv  "${venv_dir}"
 
     # Run GeoNature in DEV mode with extra options for Gunicorn and Flask
     export GUNICORN_CMD_ARGS="--capture-output --log-level debug";

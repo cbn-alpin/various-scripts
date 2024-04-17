@@ -89,12 +89,11 @@ function runBackendServer() {
 
     deactivatePyenv
 
-    activateVenv
+    activateVenv "${venv_dir}"
 
     if isVersionGreaterThan "${version}" "2.1.3"; then
         export FLASK_APP="app.app:create_app"
         export FLASK_RUN_PORT="${flask_port}"
-        echo "$FLASK_RUN_PORT"
         runFlaskServer
     else
         stopSupervisor

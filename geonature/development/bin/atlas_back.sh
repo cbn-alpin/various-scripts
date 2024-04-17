@@ -81,7 +81,7 @@ function runBackendServer() {
 
     deactivatePyenv
 
-    activateVenv
+    activateVenv "${venv_dir}"
 
     if isVersionGreaterThan "${version}" "1.5.0"; then
         export FLASK_APP="atlas.app"

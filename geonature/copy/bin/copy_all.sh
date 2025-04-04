@@ -86,7 +86,6 @@ function main() {
     copySources
     copyOrganims
     copyNomenclatures
-    copyTaxonomy
     copyGeography
     copyUsers
     copyPermissions
@@ -110,7 +109,6 @@ function main() {
 function truncateDestTables() {
     printMsg "Tuncate destination tables"
     executeQueryInDestDb 'TRUNCATE
-        taxonomie.bib_noms,
         ref_geo.bib_areas_types,
         ref_geo.l_areas,
         ref_nomenclatures.bib_nomenclatures_types,
@@ -148,11 +146,6 @@ function copyNomenclatures() {
     copy "ref_nomenclatures.bib_nomenclatures_types"
     copy "ref_nomenclatures.t_nomenclatures"
     copy "ref_nomenclatures.defaults_nomenclatures_value"
-}
-
-function copyTaxonomy() {
-    printMsg "Copy taxonomy"
-    copy "taxonomie.bib_noms (id_nom, cd_nom, cd_ref, nom_francais, comments)" "taxonomie.bib_noms"
 }
 
 function copyGeography() {
@@ -232,8 +225,16 @@ function copySynthese() {
     executeQueryInDestDb "ALTER TABLE gn_synthese.synthese
         DROP CONSTRAINT IF EXISTS fk_synthese_cd_nom ;"
 
+    # Add temporary field
+    executeQueryInSrcDb "ALTER TABLE gn_synthese.synthese
+        ADD COLUMN IF NOT EXISTS id_import int4 NULL ;"
+
     copy "gn_synthese.defaults_nomenclatures_value"
     copy "gn_synthese.synthese"
+
+    # Remove temporary field
+    executeQueryInSrcDb "ALTER TABLE gn_synthese.synthese
+        DROP COLUMN id_import ;"
 
     # Restore TaxRef constraint
     executeQueryInDestDb "UPDATE gn_synthese.synthese AS s

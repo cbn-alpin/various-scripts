@@ -224,12 +224,27 @@ function copySynthese() {
 
     # TODO: Add id_area_attachement to 1,5 millions observations with
     # id_nomenclature_info_geo_type code = 2 and id_area_attachment IS NULL.
-    # For now, remove constaint.
+    # For now, remove constraint.
     executeQueryInDestDb "ALTER TABLE gn_synthese.synthese
         DROP CONSTRAINT IF EXISTS check_synthese_info_geo_type_id_area_attachment ;"
 
+    # Remove temporary Taxref constraint
+    executeQueryInDestDb "ALTER TABLE gn_synthese.synthese
+        DROP CONSTRAINT IF EXISTS fk_synthese_cd_nom ;"
+
     copy "gn_synthese.defaults_nomenclatures_value"
     copy "gn_synthese.synthese"
+
+    # Restore TaxRef constraint
+    executeQueryInDestDb "UPDATE gn_synthese.synthese AS s
+        SET cd_nom = NULL
+        WHERE NOT EXISTS (
+            SELECT 'X' FROM taxonomie.taxref AS t WHERE t.cd_nom = s.cd_nom
+        ) ;"
+    executeQueryInDestDb "ALTER TABLE gn_synthese.synthese
+        ADD CONSTRAINT fk_synthese_cd_nom
+        FOREIGN KEY (cd_nom) REFERENCES taxonomie.taxref(cd_nom)
+        ON UPDATE CASCADE ;"
 
     checkSuperuser
     enableSyntheseTriggers

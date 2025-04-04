@@ -1,4 +1,7 @@
 -- Add TERRITORY area for Atlas
+
+\timing
+
 BEGIN;
 
 
@@ -28,13 +31,20 @@ INSERT INTO ref_geo.bib_areas_types (
         WHERE bat.type_code = 'TERRITORY'
     ) ;
 
+\echo '----------------------------------------------------------------------------'
+\echo 'Disable REG, SINP area if necessary'
+UPDATE ref_geo.l_areas
+SET "enable" = FALSE
+WHERE id_type IN (
+    ref_geo.get_id_area_type('SINP'),
+    ref_geo.get_id_area_type('REG')
+) ;
 
--- \echo '----------------------------------------------------------------------------'
--- \echo 'Remove previous TERRITORY area if necessary'
--- DELETE FROM ref_geo.l_areas
--- WHERE id_type = ref_geo.get_id_area_type('TERRITORY')
---     AND area_code = 'TERRITORY' ;
-
+\echo '----------------------------------------------------------------------------'
+\echo 'Remove previous TERRITORY area if necessary'
+DELETE FROM ref_geo.l_areas
+WHERE id_type = ref_geo.get_id_area_type('TERRITORY')
+    AND area_code = 'TERRITORY' ;
 
 \echo '----------------------------------------------------------------------------'
 \echo 'Insert TERRITORY area'

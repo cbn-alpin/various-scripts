@@ -86,8 +86,14 @@ function runGeoNatureFrontendServer() {
     cd ${front_dir}
 
     printVerbose "Enable Nvm"
-    . ~/.nvm/nvm.sh;
-    nvm use;
+    source ~/.nvm/nvm.sh
+    declare nvm_version=$(<"./.nvmrc")
+    declare installed_nvm_version=$(nvm ls --no-colors "${nvm_version}" | command tail -1 | command tr -d '\->*' | command tr -d '[:space:]')
+    if [ "${installed_nvm_version}" = 'N/A' ]; then
+        nvm install "${nvm_version}";
+    else
+        nvm use;
+    fi
 
     printMsg "Run GeoNature Angular server in Dev mode"
     if ! isVersionGreaterThan "${version}" "2.8.1"; then

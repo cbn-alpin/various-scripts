@@ -1,4 +1,8 @@
 #!/bin/bash
+# Auteur : Arnaud Ungaro
+# Structure : CBNA (Conservatoire Botanique National Alpin)
+# Année : 2025
+# Script de sauvegarde de l’instance Joomla (cms-cbna-joomla)
 
 set -e
 set -o pipefail

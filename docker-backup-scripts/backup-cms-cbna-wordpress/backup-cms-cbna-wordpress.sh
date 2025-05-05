@@ -1,4 +1,8 @@
 #!/bin/bash
+# Auteur : Arnaud Ungaro
+# Structure : CBNA (Conservatoire Botanique National Alpin)
+# Année : 2025
+# Script de sauvegarde de l’instance WordPress (cms-cbna-wordpress)
 
 set -e
 set -o pipefail

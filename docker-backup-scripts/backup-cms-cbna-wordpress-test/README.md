@@ -1,6 +1,6 @@
-# Sauvegarde cms-cbna-test-wordpress
+# Sauvegarde cms-cbna-wordpress-test
 
-Script Bash de sauvegarde de l'instance cms-cbna-test-wordpress
+Script Bash de sauvegarde de l'instance cms-cbna-wordpress-test
 Fonctionne depuis l’hôte, sans modification des conteneurs.
 
 Le script effectue :

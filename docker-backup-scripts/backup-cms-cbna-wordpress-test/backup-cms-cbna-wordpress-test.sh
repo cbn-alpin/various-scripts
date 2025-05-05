@@ -9,7 +9,7 @@ export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 nom_sauvegarde="cms-cbna-wordpress-test"
 
 # répertoire de travail
-repertoire_sauvegarde="/home/admin/docker/cms-cbna-wordpress-test/auntest"
+repertoire_sauvegarde="/home/admin/docker/cms-cbna-wordpress-test/backups"
 date_du_jour=$(date +%F)
 dossier_cible="${repertoire_sauvegarde}/${date_du_jour}_${nom_sauvegarde}"
 dossier_temporaire="${dossier_cible}/tmp"

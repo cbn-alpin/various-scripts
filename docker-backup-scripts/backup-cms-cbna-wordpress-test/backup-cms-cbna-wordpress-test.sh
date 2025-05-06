@@ -22,12 +22,14 @@ retenue_jours=2
 # conteneurs utilisés
 conteneur_bdd="cms-cbna-test-mariadb"
 conteneur_site="cms-cbna-test-wordpress"
-conteneur_dump="cms-cbna-test-backup-cron"
 
 # base de données à sauvegarder
 nom_base="wordpress"
 port_bdd=3306
 options_dump="--single-transaction --quick --lock-tables=false"
+
+# image contenant mariadb-dump
+image_dump="mariadb:11.1-jammy"
 
 echo "----------------------------------------"
 echo "DÉMARRAGE DE LA SAUVEGARDE : ${date_du_jour}"
@@ -35,7 +37,7 @@ echo "Nom logique : ${nom_sauvegarde}"
 echo "Répertoire de travail : ${dossier_cible}"
 echo "Conteneur base de données : ${conteneur_bdd}"
 echo "Conteneur site web : ${conteneur_site}"
-echo "Conteneur pour le dump : ${conteneur_dump}"
+echo "Image utilisée pour le dump : ${image_dump}"
 echo "----------------------------------------"
 
 # suppression préalable du répertoire si déjà présent
@@ -53,10 +55,19 @@ echo "Extraction des identifiants depuis le conteneur base de données..."
 utilisateur_bdd=$(docker exec ${conteneur_bdd} printenv MARIADB_USER)
 motdepasse_bdd=$(docker exec ${conteneur_bdd} printenv MARIADB_PASSWORD)
 
-# dump SQL
-echo "Export de la base de données '${nom_base}'..."
-docker exec ${conteneur_dump} mysqldump --host=${conteneur_bdd} --port=${port_bdd} ${options_dump} -u${utilisateur_bdd} -p${motdepasse_bdd} ${nom_base} | gzip > "${dossier_cible}/${nom_sauvegarde}.dump.sql.gz"
+# dump SQL avec image temporaire mariadb
+echo "Export de la base de données '${nom_base}' via mariadb-dump (conteneur éphémère)..."
+docker run --rm \
+  --network container:${conteneur_bdd} \
+  ${image_dump} \
+  mariadb-dump \
+  --host=127.0.0.1 \
+  --port=${port_bdd} \
+  ${options_dump} \
+  -u${utilisateur_bdd} -p${motdepasse_bdd} ${nom_base} \
+  | gzip > "${dossier_cible}/${nom_sauvegarde}.dump.sql.gz"
 echo "Dump SQL terminé : ${nom_sauvegarde}.dump.sql.gz"
+echo "Conteneur éphémère mariadb utilisé pour le dump supprimé automatiquement (--rm)."
 
 # copie des fichiers applicatifs
 echo "Copie des fichiers du site WordPress..."

@@ -35,6 +35,7 @@ echo "Conteneur base de données : ${conteneur_bdd}"
 echo "Conteneur pour les fichiers : ${conteneur_data}"
 echo "Image utilisée pour le dump : ${image_dump}"
 echo "----------------------------------------"
+echo ""
 
 # suppression préalable du répertoire si déjà présent
 if [ -d "${dossier_cible}" ]; then
@@ -45,40 +46,58 @@ fi
 # création des répertoires
 echo "Création du répertoire de sauvegarde..."
 mkdir -p "${dossier_temporaire}"
+echo ""
 
 # récupération des identifiants DB
 echo "Extraction des identifiants depuis le conteneur base de données..."
-nom_base=$(docker exec ${conteneur_bdd} printenv POSTGRES_DB)
-utilisateur_bdd=$(docker exec ${conteneur_bdd} printenv POSTGRES_USER)
-motdepasse_bdd=$(docker exec ${conteneur_bdd} printenv POSTGRES_PASSWORD)
+nom_base=$(docker exec "${conteneur_bdd}" printenv POSTGRES_DB)
+utilisateur_bdd=$(docker exec "${conteneur_bdd}" printenv POSTGRES_USER)
+motdepasse_bdd=$(docker exec "${conteneur_bdd}" printenv POSTGRES_PASSWORD)
+
+# vérification des identifiants
+if [[ -z "${nom_base}" || -z "${utilisateur_bdd}" || -z "${motdepasse_bdd}" ]]; then
+    echo "Erreur : identifiants DB incomplets ou introuvables."
+    exit 1
+fi
+echo ""
 
 # dump SQL avec conteneur temporaire postgres
 echo "Export de la base de données '${nom_base}' via pg_dump (conteneur éphémère)..."
 docker run --rm \
-  --network container:${conteneur_bdd} \
-  -e PGPASSWORD=${motdepasse_bdd} \
-  ${image_dump} \
-  pg_dump -h 127.0.0.1 -p ${port_bdd} -U ${utilisateur_bdd} -d ${nom_base} \
+  --network container:"${conteneur_bdd}" \
+  -e PGPASSWORD="${motdepasse_bdd}" \
+  "${image_dump}" \
+  pg_dump -h 127.0.0.1 -p "${port_bdd}" -U "${utilisateur_bdd}" -d "${nom_base}" \
   | gzip > "${dossier_cible}/${nom_sauvegarde}.dump.sql.gz"
 echo "Dump SQL terminé : ${nom_sauvegarde}.dump.sql.gz"
 echo "Conteneur éphémère postgres utilisé pour le dump supprimé automatiquement (--rm)."
+echo ""
 
 # copie des fichiers statiques/media
 echo "Copie des fichiers statiques et médias de Taiga..."
-docker cp ${conteneur_data}:/taiga-back/static "${dossier_temporaire}/static"
-docker cp ${conteneur_data}:/taiga-back/media "${dossier_temporaire}/media"
+docker cp "${conteneur_data}:/taiga-back/static" "${dossier_temporaire}/static"
+docker cp "${conteneur_data}:/taiga-back/media" "${dossier_temporaire}/media"
+echo ""
 
 echo "Archivage des fichiers statiques et médias..."
-tar czf "${dossier_cible}/${nom_sauvegarde}.media-static.tar.gz" -C "${dossier_temporaire}" static media
+if ! tar czf "${dossier_cible}/${nom_sauvegarde}.media-static.tar.gz" -C "${dossier_temporaire}" static media; then
+    echo "Erreur : Archivage échoué."
+    exit 1
+fi
 echo "Archive créée : ${nom_sauvegarde}.media-static.tar.gz"
+echo ""
 
 # nettoyage
 echo "Nettoyage du dossier temporaire..."
 rm -rf "${dossier_temporaire}"
 
+# réduction des droits d’accès
+chmod -R 700 "${dossier_cible}"
+
 # rotation
 echo "Suppression des sauvegardes de plus de ${retenue_jours} jours..."
-find "${repertoire_sauvegarde}" -mindepth 1 -maxdepth 1 -type d -name "*_${nom_sauvegarde}" -mtime +${retenue_jours} -exec rm -rf {} \;
+find "${repertoire_sauvegarde}" -mindepth 1 -maxdepth 1 -type d -name "*_${nom_sauvegarde}" -mtime "+${retenue_jours}" -exec rm -rf {} \;
 
+echo ""
 echo "Sauvegarde terminée avec succès."
 exit 0

@@ -39,6 +39,7 @@ echo "Conteneur base de données : ${conteneur_bdd}"
 echo "Conteneur site web : ${conteneur_site}"
 echo "Image utilisée pour le dump : ${image_dump}"
 echo "----------------------------------------"
+echo ""
 
 # suppression préalable du répertoire si déjà présent
 if [ -d "${dossier_cible}" ]; then
@@ -49,41 +50,59 @@ fi
 # création des répertoires
 echo "Création du répertoire de sauvegarde..."
 mkdir -p "${dossier_temporaire}"
+echo ""
 
 # récupération des identifiants
 echo "Extraction des identifiants depuis le conteneur base de données..."
-utilisateur_bdd=$(docker exec ${conteneur_bdd} printenv MARIADB_USER)
-motdepasse_bdd=$(docker exec ${conteneur_bdd} printenv MARIADB_PASSWORD)
+utilisateur_bdd=$(docker exec "${conteneur_bdd}" printenv MARIADB_USER)
+motdepasse_bdd=$(docker exec "${conteneur_bdd}" printenv MARIADB_PASSWORD)
+
+# vérification des identifiants
+if [[ -z "${utilisateur_bdd}" || -z "${motdepasse_bdd}" ]]; then
+    echo "Erreur : identifiants DB incomplets ou introuvables."
+    exit 1
+fi
+echo ""
 
 # dump SQL avec image temporaire mariadb
 echo "Export de la base de données '${nom_base}' via mariadb-dump (conteneur éphémère)..."
 docker run --rm \
-  --network container:${conteneur_bdd} \
-  ${image_dump} \
+  --network container:"${conteneur_bdd}" \
+  "${image_dump}" \
   mariadb-dump \
   --host=127.0.0.1 \
-  --port=${port_bdd} \
+  --port="${port_bdd}" \
   ${options_dump} \
-  -u${utilisateur_bdd} -p${motdepasse_bdd} ${nom_base} \
+  -u"${utilisateur_bdd}" -p"${motdepasse_bdd}" "${nom_base}" \
   | gzip > "${dossier_cible}/${nom_sauvegarde}.dump.sql.gz"
 echo "Dump SQL terminé : ${nom_sauvegarde}.dump.sql.gz"
 echo "Conteneur éphémère mariadb utilisé pour le dump supprimé automatiquement (--rm)."
+echo ""
 
 # copie des fichiers applicatifs
 echo "Copie des fichiers du site WordPress..."
-docker cp ${conteneur_site}:/var/www/html "${dossier_temporaire}/html"
+docker cp "${conteneur_site}:/var/www/html" "${dossier_temporaire}/html"
+echo ""
 
 echo "Archivage des fichiers applicatifs..."
-tar czf "${dossier_cible}/${nom_sauvegarde}.html.tar.gz" -C "${dossier_temporaire}" html
+if ! tar czf "${dossier_cible}/${nom_sauvegarde}.html.tar.gz" -C "${dossier_temporaire}" html; then
+    echo "Erreur : Archivage échoué."
+    exit 1
+fi
 echo "Archive créée : ${nom_sauvegarde}.html.tar.gz"
+echo ""
 
 # nettoyage
 echo "Nettoyage du dossier temporaire..."
 rm -rf "${dossier_temporaire}"
 
+# réduction des droits d’accès
+chmod -R 700 "${dossier_cible}"
+
 # rotation
 echo "Suppression des sauvegardes de plus de ${retenue_jours} jours..."
-find "${repertoire_sauvegarde}" -mindepth 1 -maxdepth 1 -type d -name "*_${nom_sauvegarde}" -mtime +${retenue_jours} -exec rm -rf {} \;
+find "${repertoire_sauvegarde}" -mindepth 1 -maxdepth 1 -type d -name "*_${nom_sauvegarde}" -mtime "+${retenue_jours}" -exec rm -rf {} \;
 
+echo ""
 echo "Sauvegarde terminée avec succès."
 exit 0

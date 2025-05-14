@@ -81,9 +81,47 @@ echo "Archive créée : ${nom_sauvegarde}.html.tar.gz"
 echo "Nettoyage du dossier temporaire..."
 rm -rf "${dossier_temporaire}"
 
-# rotation
-echo "Suppression des sauvegardes de plus de ${retenue_jours} jours..."
-find "${repertoire_sauvegarde}" -mindepth 1 -maxdepth 1 -type d -name "*_${nom_sauvegarde}" -mtime +${retenue_jours} -exec rm -rf {} \;
+# réduction des droits d’accès
+chmod -R 700 "${dossier_cible}"
+
+# rotation sécurisée basée sur la nomenclature des dossiers
+echo "Rotation des sauvegardes : conservation de ${retenue_jours} jours..."
+date_limite=$(date -d "-${retenue_jours} days" +%Y-%m-%d)
+date_limite_ts=$(date -d "${date_limite}" +%s)
+
+echo "Date limite pour conservation : ${date_limite}"
+echo ""
+
+# DEBUG : désactivation temporaire du mode "exit on error" pour éviter les arrêts silencieux
+set +e
+
+for dossier in "${repertoire_sauvegarde}/"[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_"${nom_sauvegarde}"; do
+    if [ -d "${dossier}" ]; then
+        dossier_base=$(basename "${dossier}")
+        dossier_date=$(echo "${dossier_base}" | grep -Eo '^[0-9]{4}-[0-9]{2}-[0-9]{2}')
+
+        if [[ ! "${dossier_date}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "IGNORÉ (format non conforme) : ${dossier}"
+            continue
+        fi
+
+        dossier_date_ts=$(date -d "${dossier_date}" +%s)
+
+        if [ "${dossier_date_ts}" -lt "${date_limite_ts}" ]; then
+            echo "SUPPRESSION programmée : ${dossier}"
+            if rm -rfv "${dossier}"; then
+                echo "SUPPRESSION RÉUSSIE : ${dossier}"
+            else
+                echo "ÉCHEC DE LA SUPPRESSION : ${dossier}"
+            fi
+        else
+            echo "CONSERVÉ : ${dossier}"
+        fi
+    fi
+done
+
+# DEBUG : réactivation du mode strict après la rotation
+set -e
 
 echo "Sauvegarde terminée avec succès."
 exit 0
